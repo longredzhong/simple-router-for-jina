@@ -1,0 +1,22 @@
+apiVersion: serving.jina.ai/v1alpha1
+kind: JinaServing
+metadata:
+  name: text-reranker
+  namespace: ai-serving
+spec:
+  mode: reranker
+  reranker:
+    model: jina-reranker-v3
+    runtime: gpu
+    replicas: 1
+    resources:
+      cpu: "4"
+      memory: 6Gi
+      gpu: 1
+  exposure:
+    mode: direct
+    port: 8080
+  production:
+    requireImageDigest: false
+    networkPolicy: true
+    readOnlyRootFilesystem: true

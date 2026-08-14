@@ -1,0 +1,22 @@
+apiVersion: serving.jina.ai/v1alpha1
+kind: JinaServing
+metadata:
+  name: text-embedding
+  namespace: ai-serving
+spec:
+  mode: embedding
+  embedding:
+    model: jina-embeddings-v5-text-small
+    runtime: cpu
+    replicas: 1
+    resources:
+      cpu: "4"
+      memory: 6Gi
+      gpu: 0
+  exposure:
+    mode: direct
+    port: 8080
+  production:
+    requireImageDigest: false
+    networkPolicy: true
+    readOnlyRootFilesystem: true

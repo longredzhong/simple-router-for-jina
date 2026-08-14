@@ -1,0 +1,34 @@
+apiVersion: serving.jina.ai/v1alpha1
+kind: JinaServing
+metadata:
+  name: search-models
+  namespace: ai-serving
+  labels:
+    app.kubernetes.io/part-of: search
+spec:
+  mode: combined
+  embedding:
+    model: jina-embeddings-v5-text-small
+    runtime: gpu-opt
+    replicas: 2
+    resources:
+      cpu: "4"
+      memory: 8Gi
+      gpu: 1
+    env:
+      JINA_BATCH_TOKENS: "8192"
+  reranker:
+    model: jina-reranker-v3
+    runtime: gpu
+    replicas: 1
+    resources:
+      cpu: "4"
+      memory: 6Gi
+      gpu: 1
+  exposure:
+    mode: gateway
+    port: 8080
+  production:
+    requireImageDigest: false
+    networkPolicy: true
+    readOnlyRootFilesystem: true

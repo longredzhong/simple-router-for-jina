@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://github.com/jina-ai/jina-on-prem/blob/c9fde811503b3daf9a0d1bbe778238dd9c7e9005/models/catalog.json",
+    "revision": "c9fde811503b3daf9a0d1bbe778238dd9c7e9005",
+    "syncedAt": "2026-08-14"
+  },
+  "models": [
+    {
+      "id": "jina-embeddings-v5-text-nano",
+      "role": "embedding",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-embeddings-v5-text-nano",
+      "runtimes": ["cpu", "gpu", "gpu-opt"],
+      "defaultCpu": "2",
+      "defaultMemory": "4Gi"
+    },
+    {
+      "id": "jina-embeddings-v5-text-small",
+      "role": "embedding",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-embeddings-v5-text-small",
+      "runtimes": ["cpu", "gpu", "gpu-opt"],
+      "defaultCpu": "4",
+      "defaultMemory": "6Gi"
+    },
+    {
+      "id": "jina-embeddings-v3",
+      "role": "embedding",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-embeddings-v3",
+      "runtimes": ["cpu", "gpu", "gpu-opt"],
+      "defaultCpu": "4",
+      "defaultMemory": "6Gi"
+    },
+    {
+      "id": "jina-embeddings-v5-omni-nano",
+      "role": "embedding",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-embeddings-v5-omni-nano",
+      "runtimes": ["cpu", "gpu", "gpu-opt"],
+      "defaultCpu": "4",
+      "defaultMemory": "8Gi"
+    },
+    {
+      "id": "jina-embeddings-v5-omni-small",
+      "role": "embedding",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-embeddings-v5-omni-small",
+      "runtimes": ["cpu", "gpu", "gpu-opt"],
+      "defaultCpu": "8",
+      "defaultMemory": "16Gi"
+    },
+    {
+      "id": "jina-clip-v2",
+      "role": "embedding",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-clip-v2",
+      "runtimes": ["cpu", "gpu", "gpu-opt"],
+      "defaultCpu": "4",
+      "defaultMemory": "8Gi"
+    },
+    {
+      "id": "jina-reranker-v3.5",
+      "role": "reranker",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-reranker-v3.5",
+      "runtimes": ["cpu", "gpu"],
+      "defaultCpu": "4",
+      "defaultMemory": "6Gi"
+    },
+    {
+      "id": "jina-reranker-v3",
+      "role": "reranker",
+      "repository": "ghcr.io/jina-ai/jina-on-prem/jina-reranker-v3",
+      "runtimes": ["cpu", "gpu"],
+      "defaultCpu": "4",
+      "defaultMemory": "6Gi"
+    }
+  ]
+}

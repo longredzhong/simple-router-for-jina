@@ -1,0 +1,1 @@
+"""Packaged, deterministic resource snapshots."""
