@@ -1,0 +1,55 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $root := . -}}
+{{- range $service := .Values.services }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ printf "%s-%s" (include "jina-serving.fullname" $root) $service.role | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "jina-serving.commonLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: {{ $service.role }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $root.Release.Name }}
+      app.kubernetes.io/component: {{ $service.role }}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            {{- if $root.Values.gateway.enabled }}
+            matchLabels:
+              app.kubernetes.io/instance: {{ $root.Release.Name }}
+              app.kubernetes.io/component: gateway
+            {{- else }}
+            matchLabels: {}
+            {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ $service.containerPort }}
+{{- end }}
+{{- if .Values.gateway.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "jina-serving.fullname" . }}-gateway
+  labels:
+    {{- include "jina-serving.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: gateway
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}
+{{- end }}

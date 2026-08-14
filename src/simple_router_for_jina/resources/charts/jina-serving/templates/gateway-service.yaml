@@ -1,0 +1,19 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "jina-serving.fullname" . }}-gateway
+  labels:
+    {{- include "jina-serving.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: gateway
+  ports:
+    - name: http
+      port: {{ .Values.gateway.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}

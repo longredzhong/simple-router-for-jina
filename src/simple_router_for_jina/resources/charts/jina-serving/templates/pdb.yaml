@@ -1,0 +1,19 @@
+{{- $root := . -}}
+{{- range $service := .Values.services }}
+{{- if gt (int $service.replicas) 1 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ printf "%s-%s" (include "jina-serving.fullname" $root) $service.role | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "jina-serving.commonLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: {{ $service.role }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $root.Release.Name }}
+      app.kubernetes.io/component: {{ $service.role }}
+{{- end }}
+{{- end }}

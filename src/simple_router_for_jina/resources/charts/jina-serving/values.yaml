@@ -1,0 +1,24 @@
+nameOverride: ""
+commonLabels: {}
+
+services: []
+
+serviceAccount:
+  create: true
+  name: ""
+
+gateway:
+  enabled: false
+  image: docker.io/nginxinc/nginx-unprivileged:1.29.1-alpine
+  replicas: 2
+  port: 8080
+
+networkPolicy:
+  enabled: true
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: ""
+  tlsSecretName: ""

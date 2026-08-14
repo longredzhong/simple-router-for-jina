@@ -1,0 +1,100 @@
+{{- $root := . -}}
+{{- range $service := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-%s" (include "jina-serving.fullname" $root) $service.role | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "jina-serving.commonLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: {{ $service.role }}
+spec:
+  replicas: {{ $service.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $root.Release.Name }}
+      app.kubernetes.io/component: {{ $service.role }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "jina-serving.name" $root }}
+        app.kubernetes.io/instance: {{ $root.Release.Name }}
+        app.kubernetes.io/component: {{ $service.role }}
+        {{- range $key, $value := $root.Values.commonLabels }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "jina-serving.serviceAccountName" $root }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ $service.role }}
+          image: {{ $service.image | quote }}
+          imagePullPolicy: {{ $service.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $service.containerPort }}
+              protocol: TCP
+          {{- with $service.env }}
+          env:
+            {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: {{ $service.readOnlyRootFilesystem }}
+            capabilities:
+              drop: ["ALL"]
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ $service.resources.cpu | quote }}
+              memory: {{ $service.resources.memory | quote }}
+            limits:
+              cpu: {{ $service.resources.cpu | quote }}
+              memory: {{ $service.resources.memory | quote }}
+              {{- if gt (int $service.resources.gpu) 0 }}
+              nvidia.com/gpu: {{ $service.resources.gpu }}
+              {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+{{- end }}

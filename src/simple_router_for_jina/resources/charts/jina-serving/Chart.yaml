@@ -1,0 +1,7 @@
+apiVersion: v2
+name: jina-serving
+description: Production-oriented Jina embedding and reranker workloads
+type: application
+version: 0.1.0
+appVersion: "0.2.0"
+kubeVersion: ">=1.27.0-0"

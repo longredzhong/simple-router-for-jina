@@ -1,0 +1,61 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "jina-serving.fullname" . }}-gateway
+  labels:
+    {{- include "jina-serving.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        server_name _;
+        client_max_body_size 64m;
+
+        proxy_http_version 1.1;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_request_buffering off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+
+        location = /health {
+            access_log off;
+            default_type application/json;
+            return 200 '{"status":"ok"}';
+        }
+
+        location = /v1/rerank {
+            proxy_pass http://{{ include "jina-serving.fullname" . }}-reranker:8080;
+        }
+
+        location = /v1/embeddings {
+            proxy_pass http://{{ include "jina-serving.fullname" . }}-embedding:8080;
+        }
+
+        location = /v2/embed {
+            proxy_pass http://{{ include "jina-serving.fullname" . }}-embedding:8080;
+        }
+
+        location = /v1/models {
+            proxy_pass http://{{ include "jina-serving.fullname" . }}-embedding:8080;
+        }
+
+        location /v1/models/ {
+            proxy_pass http://{{ include "jina-serving.fullname" . }}-embedding:8080;
+        }
+
+        location = /v1/classify {
+            proxy_pass http://{{ include "jina-serving.fullname" . }}-embedding:8080;
+        }
+
+        location / {
+            default_type application/json;
+            return 404 '{"error":{"message":"unsupported endpoint","code":"not_found"}}';
+        }
+    }
+{{- end }}
