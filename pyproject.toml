@@ -2,9 +2,11 @@
 name = "simple-router-for-jina"
 version = "0.2.0.dev0"
 description = "Compile a versioned Jina serving definition into production deployment artifacts."
+readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "longred", email = "longredzhong@outlook.com" }]
+keywords = ["jina", "embedding", "reranker", "docker-compose", "helm", "kustomize"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -22,6 +24,9 @@ dependencies = [
   "pydantic>=2.11,<3",
   "PyYAML>=6,<7",
 ]
+
+[project.urls]
+Repository = "https://github.com/longred/simple-router-for-jina"
 
 [project.optional-dependencies]
 dev = [

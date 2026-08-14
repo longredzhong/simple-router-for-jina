@@ -176,7 +176,7 @@ spec:
 
 ### 阶段 5：CI、文档与运行验证
 
-状态：进行中。
+状态：部分完成。确定性测试、renderer、文档、CI 定义和打包验证已完成；真实 CPU/GPU 模型及 Kubernetes 集群验收待执行。
 
 交付：
 
@@ -190,6 +190,8 @@ spec:
 - wheel/sdist 能安装并运行 CLI。
 - 所有文档示例通过 Schema 和 renderer 验证。
 - CPU smoke、GPU smoke、Kubernetes smoke 分别报告，不相互替代。
+
+当前验证证据和未验证边界见 `docs/VALIDATION.md`。
 
 ## 5. 非目标
 
