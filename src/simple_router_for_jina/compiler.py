@@ -32,6 +32,16 @@ class ResourceIR:
 
 
 @dataclass(frozen=True, slots=True)
+class SecretEnvIR:
+    """External secret references for Compose and Kubernetes."""
+
+    name: str
+    compose_environment: str
+    kubernetes_secret_name: str
+    kubernetes_secret_key: str
+
+
+@dataclass(frozen=True, slots=True)
 class ServiceIR:
     """A single model workload."""
 
@@ -43,6 +53,7 @@ class ServiceIR:
     replicas: int
     resources: ResourceIR
     env: tuple[tuple[str, str], ...]
+    secret_env: tuple[SecretEnvIR, ...]
     container_port: int = 8080
 
 
@@ -120,6 +131,20 @@ def _compile_service(
             gpu=gpu,
         ),
         env=tuple(sorted(spec.env.items())),
+        secret_env=tuple(
+            sorted(
+                (
+                    SecretEnvIR(
+                        name=item.name,
+                        compose_environment=item.compose_environment or item.name,
+                        kubernetes_secret_name=item.kubernetes_secret.name,
+                        kubernetes_secret_key=item.kubernetes_secret.key,
+                    )
+                    for item in spec.secret_env
+                ),
+                key=lambda item: item.name,
+            )
+        ),
     )
 
 

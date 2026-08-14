@@ -37,6 +37,14 @@ def _values(ir: DeploymentIR) -> dict[str, Any]:
                 "containerPort": service.container_port,
                 "servicePort": service.container_port if gateway_enabled else ir.exposure_port,
                 "env": dict(service.env),
+                "secretEnv": [
+                    {
+                        "name": secret.name,
+                        "secretName": secret.kubernetes_secret_name,
+                        "secretKey": secret.kubernetes_secret_key,
+                    }
+                    for secret in service.secret_env
+                ],
                 "readOnlyRootFilesystem": ir.production.read_only_root_filesystem,
                 "resources": {
                     "cpu": service.resources.cpu,

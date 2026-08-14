@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from simple_router_for_jina.cli import cli
 from simple_router_for_jina.compiler import compile_config
 from simple_router_for_jina.config.loader import load_config
+from simple_router_for_jina.config.schema import JinaServing
 from simple_router_for_jina.renderers.helm import render_helm
 
 EXAMPLES = Path(__file__).parents[1] / "examples"
@@ -81,3 +82,25 @@ def test_cli_renders_self_contained_helm_bundle(tmp_path: Path) -> None:
     assert (output / "Chart.yaml").is_file()
     assert (output / "values.generated.yaml").is_file()
     assert (output / "templates" / "gateway-deployment.yaml").is_file()
+
+
+def test_helm_secret_uses_secret_key_reference() -> None:
+    raw = yaml.safe_load((EXAMPLES / "embedding.yaml").read_text())
+    raw["spec"]["embedding"]["secretEnv"] = [
+        {
+            "name": "JINA_LICENSE_KEY",
+            "kubernetesSecret": {"name": "jina-license", "key": "license-key"},
+        }
+    ]
+
+    files = render_helm(compile_config(JinaServing.model_validate(raw)))
+    values = yaml.safe_load(files["values.generated.yaml"])
+
+    assert values["services"][0]["secretEnv"] == [
+        {
+            "name": "JINA_LICENSE_KEY",
+            "secretName": "jina-license",
+            "secretKey": "license-key",
+        }
+    ]
+    assert "secretKeyRef:" in files["templates/model-deployments.yaml"]

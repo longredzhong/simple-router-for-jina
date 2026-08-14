@@ -111,3 +111,30 @@ def test_production_gateway_accepts_digest() -> None:
     deployment = compile_config(JinaServing.model_validate(raw))
 
     assert deployment.gateway_image.endswith(f"@{digest}")
+
+
+def test_secret_like_plain_environment_is_rejected() -> None:
+    raw = yaml.safe_load((EXAMPLES / "embedding.yaml").read_text())
+    raw["spec"]["embedding"]["env"] = {"JINA_LICENSE_KEY": "must-not-be-rendered"}
+
+    with pytest.raises(ValidationError, match="must use secretEnv"):
+        JinaServing.model_validate(raw)
+
+
+def test_secret_environment_compiles_only_references() -> None:
+    raw = yaml.safe_load((EXAMPLES / "embedding.yaml").read_text())
+    raw["spec"]["embedding"]["secretEnv"] = [
+        {
+            "name": "JINA_LICENSE_KEY",
+            "composeEnvironment": "JINA_LICENSE_KEY",
+            "kubernetesSecret": {"name": "jina-license", "key": "license-key"},
+        }
+    ]
+
+    deployment = compile_config(JinaServing.model_validate(raw))
+    secret = deployment.services[0].secret_env[0]
+
+    assert secret.name == "JINA_LICENSE_KEY"
+    assert secret.compose_environment == "JINA_LICENSE_KEY"
+    assert secret.kubernetes_secret_name == "jina-license"
+    assert secret.kubernetes_secret_key == "license-key"

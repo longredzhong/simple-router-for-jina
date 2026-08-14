@@ -35,6 +35,7 @@
           "containerPort",
           "servicePort",
           "env",
+          "secretEnv",
           "readOnlyRootFilesystem",
           "resources"
         ],
@@ -71,6 +72,19 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
+            }
+          },
+          "secretEnv": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "secretName", "secretKey"],
+              "properties": {
+                "name": {"type": "string"},
+                "secretName": {"type": "string"},
+                "secretKey": {"type": "string"}
+              },
+              "additionalProperties": false
             }
           },
           "readOnlyRootFilesystem": {

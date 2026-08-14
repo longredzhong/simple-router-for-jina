@@ -14,6 +14,10 @@ DNS_LABEL = re.compile(r"^[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?$")
 MEMORY_QUANTITY = re.compile(r"^[1-9][0-9]*(?:Mi|Gi|Ti)$")
 IMAGE_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+SECRET_ENV_NAME = re.compile(
+    r"(?:^|_)(?:TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|LICENSE_KEY|CREDENTIALS?)(?:$|_)"
+)
+SECRET_KEY = re.compile(r"^[A-Za-z0-9._-]+$")
 DEFAULT_GATEWAY_IMAGE = "docker.io/nginxinc/nginx-unprivileged:1.29.1-alpine"
 
 
@@ -104,6 +108,42 @@ class ResourceSpec(StrictModel):
         return value
 
 
+class KubernetesSecretRef(StrictModel):
+    """Reference to an existing Kubernetes Secret key."""
+
+    name: str
+    key: str
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        if not DNS_LABEL.fullmatch(value):
+            raise ValueError("must be a lowercase Kubernetes Secret name")
+        return value
+
+    @field_validator("key")
+    @classmethod
+    def validate_key(cls, value: str) -> str:
+        if not SECRET_KEY.fullmatch(value):
+            raise ValueError("must be a valid Kubernetes Secret data key")
+        return value
+
+
+class SecretEnvSpec(StrictModel):
+    """Cross-target reference to a secret that already exists externally."""
+
+    name: str
+    compose_environment: str | None = Field(default=None, alias="composeEnvironment")
+    kubernetes_secret: KubernetesSecretRef = Field(alias="kubernetesSecret")
+
+    @field_validator("name", "compose_environment")
+    @classmethod
+    def validate_environment_name(cls, value: str | None) -> str | None:
+        if value is not None and not ENV_NAME.fullmatch(value):
+            raise ValueError("must be a valid environment variable name")
+        return value
+
+
 class ModelSpec(StrictModel):
     """A single model workload definition."""
 
@@ -113,6 +153,7 @@ class ModelSpec(StrictModel):
     replicas: int = Field(default=1, ge=1, le=100)
     resources: ResourceSpec = Field(default_factory=ResourceSpec)
     env: dict[str, str] = Field(default_factory=dict)
+    secret_env: list[SecretEnvSpec] = Field(default_factory=list, alias="secretEnv")
 
     @field_validator("env")
     @classmethod
@@ -120,7 +161,21 @@ class ModelSpec(StrictModel):
         invalid = sorted(name for name in value if not ENV_NAME.fullmatch(name))
         if invalid:
             raise ValueError(f"invalid environment variable names: {', '.join(invalid)}")
+        sensitive = sorted(name for name in value if SECRET_ENV_NAME.search(name))
+        if sensitive:
+            raise ValueError("secret-like variables must use secretEnv: " + ", ".join(sensitive))
         return value
+
+    @model_validator(mode="after")
+    def validate_secret_environment(self) -> ModelSpec:
+        secret_names = [item.name for item in self.secret_env]
+        duplicates = sorted(name for name in set(secret_names) if secret_names.count(name) > 1)
+        overlap = sorted(set(self.env).intersection(secret_names))
+        if duplicates:
+            raise ValueError(f"duplicate secretEnv names: {', '.join(duplicates)}")
+        if overlap:
+            raise ValueError(f"variables cannot appear in env and secretEnv: {', '.join(overlap)}")
+        return self
 
 
 class ExposureSpec(StrictModel):

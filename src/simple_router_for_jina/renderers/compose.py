@@ -63,8 +63,15 @@ def _model_service(service: ServiceIR, *, publish_port: int | None) -> dict[str,
         "deploy": {"replicas": service.replicas, "resources": resources},
         "logging": _logging(),
     }
-    if service.env:
-        result["environment"] = dict(service.env)
+    environment = dict(service.env)
+    environment.update(
+        {
+            secret.name: f"${{{secret.compose_environment}:?set {secret.compose_environment}}}"
+            for secret in service.secret_env
+        }
+    )
+    if environment:
+        result["environment"] = environment
     if publish_port is not None:
         result["ports"] = [f"{publish_port}:{service.container_port}"]
     return result

@@ -54,6 +54,16 @@ spec:
               value: {{ $value | quote }}
             {{- end }}
           {{- end }}
+          {{- if and (not $service.env) $service.secretEnv }}
+          env:
+          {{- end }}
+          {{- range $secret := $service.secretEnv }}
+            - name: {{ $secret.name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secret.secretName }}
+                  key: {{ $secret.secretKey }}
+          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: {{ $service.readOnlyRootFilesystem }}

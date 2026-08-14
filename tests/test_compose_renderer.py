@@ -9,6 +9,7 @@ from click.testing import CliRunner
 from simple_router_for_jina.cli import cli
 from simple_router_for_jina.compiler import compile_config
 from simple_router_for_jina.config.loader import load_config
+from simple_router_for_jina.config.schema import JinaServing
 from simple_router_for_jina.renderers.compose import render_compose
 from simple_router_for_jina.renderers.output import OutputError, write_outputs
 
@@ -97,3 +98,21 @@ def test_cli_renders_compose_bundle(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert (output / "compose.yaml").is_file()
     assert (output / "gateway" / "nginx.conf").is_file()
+
+
+def test_compose_secret_uses_required_host_environment() -> None:
+    raw = yaml.safe_load((EXAMPLES / "embedding.yaml").read_text())
+    raw["spec"]["embedding"]["secretEnv"] = [
+        {
+            "name": "JINA_LICENSE_KEY",
+            "composeEnvironment": "DEPLOYMENT_LICENSE",
+            "kubernetesSecret": {"name": "jina-license", "key": "license-key"},
+        }
+    ]
+
+    files = render_compose(compile_config(JinaServing.model_validate(raw)))
+    compose = yaml.safe_load(files["compose.yaml"])
+
+    assert compose["services"]["embedding"]["environment"]["JINA_LICENSE_KEY"] == (
+        "${DEPLOYMENT_LICENSE:?set DEPLOYMENT_LICENSE}"
+    )
