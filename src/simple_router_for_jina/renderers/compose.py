@@ -9,8 +9,6 @@ import yaml
 from simple_router_for_jina.compiler import DeploymentIR, ServiceIR
 from simple_router_for_jina.config.schema import ExposureMode
 
-GATEWAY_IMAGE = "docker.io/nginxinc/nginx-unprivileged:1.29.1-alpine"
-
 
 def _compose_memory(quantity: str) -> str:
     value = int(quantity[:-2])
@@ -74,7 +72,7 @@ def _model_service(service: ServiceIR, *, publish_port: int | None) -> dict[str,
 
 def _gateway_service(ir: DeploymentIR) -> dict[str, Any]:
     return {
-        "image": GATEWAY_IMAGE,
+        "image": ir.gateway_image,
         "restart": "unless-stopped",
         "init": True,
         "user": "101:101",

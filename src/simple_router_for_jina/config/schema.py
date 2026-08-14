@@ -14,6 +14,7 @@ DNS_LABEL = re.compile(r"^[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?$")
 MEMORY_QUANTITY = re.compile(r"^[1-9][0-9]*(?:Mi|Gi|Ti)$")
 IMAGE_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+DEFAULT_GATEWAY_IMAGE = "docker.io/nginxinc/nginx-unprivileged:1.29.1-alpine"
 
 
 class StrictModel(BaseModel):
@@ -127,6 +128,7 @@ class ExposureSpec(StrictModel):
 
     mode: ExposureMode = ExposureMode.GATEWAY
     port: int = Field(default=8080, ge=1, le=65535)
+    gateway_image: str = Field(default=DEFAULT_GATEWAY_IMAGE, alias="gatewayImage", min_length=1)
 
 
 class ProductionSpec(StrictModel):

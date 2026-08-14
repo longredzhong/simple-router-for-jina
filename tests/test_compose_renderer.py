@@ -35,6 +35,9 @@ def test_combined_uses_gateway_and_private_model_ports() -> None:
     assert "ports" not in compose["services"]["embedding"]
     assert "ports" not in compose["services"]["reranker"]
     assert compose["services"]["gateway"]["ports"] == ["8080:8080"]
+    assert compose["services"]["gateway"]["image"].startswith(
+        "docker.io/nginxinc/nginx-unprivileged:"
+    )
     assert compose["services"]["gateway"]["depends_on"] == {
         "embedding": {"condition": "service_healthy"},
         "reranker": {"condition": "service_healthy"},

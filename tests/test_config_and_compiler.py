@@ -87,3 +87,27 @@ def test_digest_produces_immutable_image_reference() -> None:
 
     assert deployment.services[0].runtime is Runtime.CPU
     assert deployment.services[0].image.endswith(f"@{digest}")
+
+
+def test_production_gateway_requires_digest() -> None:
+    raw = yaml.safe_load((EXAMPLES / "combined.yaml").read_text())
+    digest = "sha256:" + "a" * 64
+    raw["spec"]["production"]["requireImageDigest"] = True
+    raw["spec"]["embedding"]["image"] = {"digest": digest}
+    raw["spec"]["reranker"]["image"] = {"digest": digest}
+
+    with pytest.raises(CompilationError, match="gateway requires"):
+        compile_config(JinaServing.model_validate(raw))
+
+
+def test_production_gateway_accepts_digest() -> None:
+    raw = yaml.safe_load((EXAMPLES / "combined.yaml").read_text())
+    digest = "sha256:" + "a" * 64
+    raw["spec"]["production"]["requireImageDigest"] = True
+    raw["spec"]["embedding"]["image"] = {"digest": digest}
+    raw["spec"]["reranker"]["image"] = {"digest": digest}
+    raw["spec"]["exposure"]["gatewayImage"] = f"example.invalid/gateway@{digest}"
+
+    deployment = compile_config(JinaServing.model_validate(raw))
+
+    assert deployment.gateway_image.endswith(f"@{digest}")

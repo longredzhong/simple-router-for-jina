@@ -10,7 +10,6 @@ import yaml
 
 from simple_router_for_jina.compiler import DeploymentIR
 from simple_router_for_jina.config.schema import ExposureMode
-from simple_router_for_jina.renderers.compose import GATEWAY_IMAGE
 
 
 def _copy_tree(node: Traversable, prefix: str = "") -> dict[str, str]:
@@ -53,7 +52,7 @@ def _values(ir: DeploymentIR) -> dict[str, Any]:
         "serviceAccount": {"create": True, "name": ""},
         "gateway": {
             "enabled": gateway_enabled,
-            "image": GATEWAY_IMAGE,
+            "image": ir.gateway_image,
             "replicas": 2,
             "port": ir.exposure_port,
         },

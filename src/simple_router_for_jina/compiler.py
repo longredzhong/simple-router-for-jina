@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Literal
 
@@ -65,6 +66,7 @@ class DeploymentIR:
     services: tuple[ServiceIR, ...]
     exposure_mode: ExposureMode
     exposure_port: int
+    gateway_image: str
     production: ProductionIR
 
 
@@ -127,6 +129,12 @@ def compile_config(config: JinaServing, catalog: Catalog | None = None) -> Deplo
     catalog = catalog or load_catalog()
     services: list[ServiceIR] = []
     require_digest = config.spec.production.require_image_digest
+    if (
+        require_digest
+        and config.spec.exposure.mode is ExposureMode.GATEWAY
+        and re.search(r"@sha256:[0-9a-f]{64}$", config.spec.exposure.gateway_image) is None
+    ):
+        raise CompilationError("production gateway requires exposure.gatewayImage pinned by digest")
     if config.spec.embedding is not None:
         services.append(
             _compile_service(
@@ -156,6 +164,7 @@ def compile_config(config: JinaServing, catalog: Catalog | None = None) -> Deplo
         services=tuple(services),
         exposure_mode=config.spec.exposure.mode,
         exposure_port=config.spec.exposure.port,
+        gateway_image=config.spec.exposure.gateway_image,
         production=ProductionIR(
             require_image_digest=require_digest,
             network_policy=config.spec.production.network_policy,
