@@ -17,6 +17,7 @@ from simple_router_for_jina.config.loader import ConfigLoadError, load_config
 from simple_router_for_jina.config.schema import API_VERSION, KIND, JinaServing, ServingMode
 from simple_router_for_jina.renderers.compose import render_compose
 from simple_router_for_jina.renderers.helm import render_helm
+from simple_router_for_jina.renderers.kustomize import render_kustomize
 from simple_router_for_jina.renderers.output import OutputError, write_outputs
 
 
@@ -215,3 +216,28 @@ def render_helm_command(config_path: Path, output_dir: Path, force: bool) -> Non
     except (CompilationError, ConfigLoadError, OutputError, ValidationError) as exc:
         _abort_config(exc)
     click.echo(f"rendered Helm bundle: {output_dir}")
+
+
+@render_group.command("kustomize")
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+)
+@click.option(
+    "--output",
+    "output_dir",
+    type=click.Path(file_okay=False, path_type=Path),
+    required=True,
+)
+@click.option("--force", is_flag=True, help="Replace renderer-owned files that already exist.")
+def render_kustomize_command(config_path: Path, output_dir: Path, force: bool) -> None:
+    """Render a Kustomize base with dev and prod overlays."""
+
+    try:
+        deployment = compile_config(load_config(config_path))
+        write_outputs(output_dir, render_kustomize(deployment), force=force)
+    except (CompilationError, ConfigLoadError, OutputError, ValidationError) as exc:
+        _abort_config(exc)
+    click.echo(f"rendered Kustomize bundle: {output_dir}")
