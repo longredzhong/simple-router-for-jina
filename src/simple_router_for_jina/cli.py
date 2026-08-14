@@ -15,6 +15,8 @@ from simple_router_for_jina.catalog import load_catalog
 from simple_router_for_jina.compiler import CompilationError, compile_config
 from simple_router_for_jina.config.loader import ConfigLoadError, load_config
 from simple_router_for_jina.config.schema import API_VERSION, KIND, JinaServing, ServingMode
+from simple_router_for_jina.renderers.compose import render_compose
+from simple_router_for_jina.renderers.output import OutputError, write_outputs
 
 
 def _abort_config(exc: Exception) -> None:
@@ -162,3 +164,28 @@ def show_catalog(model_id: str) -> None:
 @cli.group("render")
 def render_group() -> None:
     """Render target-specific deployment files."""
+
+
+@render_group.command("compose")
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+)
+@click.option(
+    "--output",
+    "output_dir",
+    type=click.Path(file_okay=False, path_type=Path),
+    required=True,
+)
+@click.option("--force", is_flag=True, help="Replace renderer-owned files that already exist.")
+def render_compose_command(config_path: Path, output_dir: Path, force: bool) -> None:
+    """Render a Docker Compose deployment bundle."""
+
+    try:
+        deployment = compile_config(load_config(config_path))
+        write_outputs(output_dir, render_compose(deployment), force=force)
+    except (CompilationError, ConfigLoadError, OutputError, ValidationError) as exc:
+        _abort_config(exc)
+    click.echo(f"rendered compose bundle: {output_dir}")

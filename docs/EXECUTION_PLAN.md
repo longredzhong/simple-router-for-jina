@@ -126,7 +126,7 @@ spec:
 
 ### 阶段 2：Docker Compose renderer
 
-状态：进行中。
+状态：已完成。
 
 交付：
 
@@ -143,7 +143,7 @@ spec:
 
 ### 阶段 3：Helm renderer 与 Chart
 
-状态：待开始。
+状态：进行中。
 
 交付：
 
